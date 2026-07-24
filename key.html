@@ -123,9 +123,29 @@
 =================================================================== */
 const CONFIG = {
   FIREBASE_URL: "https://ezyscript-8957a-default-rtdb.asia-southeast1.firebasedatabase.app/", // <-- paste your Firebase URL here
-  DURATION_MINUTES: 1
+  DURATION_MINUTES: 1,
+  // Only visitors arriving FROM one of these domains are allowed to generate a key.
+  // Add/remove domains here to match whichever ad services you actually use.
+  ALLOWED_REFERRERS: [
+    "linkvertise.com",
+    "link-target.net",   // linkvertise sometimes redirects through this domain
+    "lootlabs.gg",
+    "loot-link.com",      // lootlabs sometimes redirects through this domain
+    "work.ink"
+  ]
 };
 /* =================================================================== */
+
+function isReferrerAllowed() {
+  const ref = document.referrer;
+  if (!ref) return false; // no referrer at all = opened link.html directly
+  try {
+    const refHost = new URL(ref).hostname;
+    return CONFIG.ALLOWED_REFERRERS.some(domain => refHost === domain || refHost.endsWith('.' + domain));
+  } catch (e) {
+    return false;
+  }
+}
 
 function generateRandomKey(length = 16) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing 0/O/1/I
@@ -199,7 +219,14 @@ copyBtn.addEventListener('click', () => {
   });
 });
 
-createKey();
+if (isReferrerAllowed()) {
+  createKey();
+} else {
+  keyValueEl.textContent = "access blocked";
+  showStatus('err', "This page only works if you arrive here through one of the checkpoint links. Go back to the landing page and complete a checkpoint first.");
+  document.getElementById('timerLabel').textContent = "n/a";
+  document.getElementById('timerValue').textContent = "--:--";
+}
 </script>
 </body>
 </html>
