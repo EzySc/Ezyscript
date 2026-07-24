@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Access — Checkpoint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --surface:#14171a;
+    --surface-hi:#1c2024;
+    --line:#262b30;
+    --text:#e8e6e1;
+    --text-dim:#8a8f94;
+    --amber:#f2c14e;
+    --teal:#2dd4bf;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(242,193,78,0.05), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(45,212,191,0.05), transparent 40%);
+  }
+  .console{
+    width:100%;
+    max-width:560px;
+  }
+  .bar{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    letter-spacing:0.08em;
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding:0 2px;
+  }
+  .bar .dot{color:var(--teal);}
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:32px 28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .panel::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background:linear-gradient(90deg, var(--amber), transparent 60%);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--teal);
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    margin:0 0 6px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.5;
+    margin:0 0 26px;
+  }
+  .log{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    background:#0d1012;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:12px 14px;
+    margin-bottom:26px;
+    line-height:1.7;
+  }
+  .log .ok{color:var(--teal);}
+  .log .pending{color:var(--amber);}
+  .checkpoints{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .cp{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--surface-hi);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px;
+    text-decoration:none;
+    color:var(--text);
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .cp:hover{
+    border-color:var(--amber);
+    transform:translateY(-1px);
+  }
+  .cp-label{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .cp-name{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:14px;
+  }
+  .cp-note{
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .cp-arrow{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--amber);
+    font-size:14px;
+  }
+  .footnote{
+    margin-top:24px;
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:center;
+    line-height:1.6;
+  }
+  .footnote code{
+    background:var(--surface-hi);
+    padding:1px 5px;
+    border-radius:4px;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--amber);
+  }
+
+  @media (max-width: 420px){
+    body{ padding:16px; align-items:flex-start; padding-top:32px; }
+    .panel{ padding:22px 18px; }
+    h1{ font-size:19px; }
+    .sub{ font-size:13px; }
+    .bar{ font-size:10px; }
+    .log{ font-size:11px; padding:10px 12px; }
+    .cp{ padding:14px 14px; }
+    .cp-name{ font-size:13px; }
+    .cp-note{ font-size:11px; }
+  }
+  @media (max-width: 340px){
+    .bar{ flex-direction:column; gap:4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="console">
+    <div class="bar"><span><span class="dot">●</span> checkpoint.access</span><span>step 1 / 2</span></div>
+    <div class="panel">
+      <div class="eyebrow">Script Access</div>
+      <h1>Complete one checkpoint to continue</h1>
+      <p class="sub">Pick either link below. Once you finish it, you'll land on the key page and get a code to paste back into the script.</p>
+
+      <div class="log">
+        &gt; session initialized<br>
+        &gt; awaiting checkpoint completion <span class="pending">[pending]</span><br>
+        &gt; key generation <span class="pending">[locked]</span>
+      </div>
+
+      <div class="checkpoints">
+        <a class="cp" href="REPLACE_WITH_YOUR_LINKVERTISE_LINK" target="_blank" rel="noopener">
+          <div class="cp-label">
+            <span class="cp-name">LINKVERTISE</span>
+            <span class="cp-note">~30–60s, one page</span>
+          </div>
+          <span class="cp-arrow">→</span>
+        </a>
+        <a class="cp" href="REPLACE_WITH_YOUR_LOOTLABS_LINK" target="_blank" rel="noopener">
+          <div class="cp-label">
+            <span class="cp-name">LOOTLABS</span>
+            <span class="cp-note">~30–60s, one page</span>
+          </div>
+          <span class="cp-arrow">→</span>
+        </a>
+      </div>
+
+      <p class="footnote">After finishing, you'll be redirected to <code>key.html</code> to get your code. Keep this tab open until then.</p>
+    </div>
+  </div>
+</body>
+</html>

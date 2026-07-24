@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Key</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --surface:#14171a; --surface-hi:#1c2024; --line:#262b30;
+    --text:#e8e6e1; --text-dim:#8a8f94; --amber:#f2c14e; --teal:#2dd4bf; --red:#e5484d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(242,193,78,0.05), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(45,212,191,0.05), transparent 40%);
+  }
+  .console{ width:100%; max-width:560px; }
+  .bar{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim);
+    letter-spacing:0.08em; display:flex; justify-content:space-between; margin-bottom:10px; padding:0 2px;
+  }
+  .bar .dot{color:var(--teal);}
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:32px 28px; position:relative; overflow:hidden;
+  }
+  .panel::before{
+    content:''; position:absolute; top:0;left:0;right:0; height:2px;
+    background:linear-gradient(90deg, var(--teal), transparent 60%);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--teal);
+    letter-spacing:0.15em; text-transform:uppercase; margin-bottom:8px;
+  }
+  h1{ font-family:'JetBrains Mono',monospace; font-size:22px; margin:0 0 6px; font-weight:700; }
+  .sub{ color:var(--text-dim); font-size:14px; line-height:1.5; margin:0 0 24px; }
+  .keybox{ background:#0d1012; border:1px solid var(--line); border-radius:8px; padding:18px; margin-bottom:16px; }
+  .keybox-label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:8px; }
+  .keyvalue{ font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--amber); word-break:break-all; line-height:1.5; }
+  .copybtn{
+    margin-top:14px; width:100%; padding:12px; background:var(--teal); color:#08201c; border:none;
+    border-radius:6px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px;
+    letter-spacing:0.04em; cursor:pointer; transition:opacity .15s ease;
+  }
+  .copybtn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .copybtn:hover:not(:disabled){opacity:0.85;}
+  .timer-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); margin-bottom:8px;
+  }
+  .timer-bar-track{ height:6px; background:var(--surface-hi); border-radius:3px; overflow:hidden; margin-bottom:24px; }
+  .timer-bar-fill{ height:100%; background:linear-gradient(90deg, var(--teal), var(--amber)); width:100%; transition:width 1s linear; }
+  .instructions{ font-size:13px; color:var(--text-dim); line-height:1.7; }
+  .instructions b{color:var(--text);}
+  .status{
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:8px 10px; border-radius:6px; margin-bottom:16px;
+  }
+  .status.ok{ background:rgba(45,212,191,0.12); color:var(--teal); }
+  .status.err{ background:rgba(229,72,77,0.12); color:var(--red); }
+  .expired-tag{
+    display:inline-block; background:rgba(229,72,77,0.15); color:var(--red);
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:3px 8px; border-radius:4px; margin-top:10px;
+  }
+
+  @media (max-width: 420px){
+    body{ padding:16px; align-items:flex-start; padding-top:32px; }
+    .panel{ padding:22px 18px; }
+    h1{ font-size:19px; }
+    .sub{ font-size:13px; }
+    .bar{ font-size:10px; }
+    .keyvalue{ font-size:14px; }
+    .instructions{ font-size:12px; }
+  }
+  @media (max-width: 340px){
+    .bar{ flex-direction:column; gap:4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="console">
+    <div class="bar"><span><span class="dot">●</span> checkpoint.access</span><span>step 2 / 2</span></div>
+    <div class="panel">
+      <div class="eyebrow">Key Generated</div>
+      <h1>Paste this into your script</h1>
+      <p class="sub">Copy the code below and paste it into the key box in-game. It expires after the timer below runs out, and can only be used by the first person who submits it.</p>
+
+      <div id="statusBox"></div>
+
+      <div class="keybox">
+        <div class="keybox-label">YOUR KEY</div>
+        <div class="keyvalue" id="keyValue">generating…</div>
+      </div>
+
+      <div class="timer-row">
+        <span id="timerLabel">time remaining</span>
+        <span id="timerValue">--:--</span>
+      </div>
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBar"></div></div>
+
+      <button class="copybtn" id="copyBtn" disabled>GENERATING…</button>
+
+      <p class="instructions" style="margin-top:24px;">
+        <b>How to use:</b> go back to your game, paste this key into the key box, and click submit. Once someone uses it, it's locked to their account and no one else can use that same key.
+      </p>
+      <div id="expiredTag" style="display:none;"><span class="expired-tag">KEY EXPIRED — REFRESH TO GET A NEW ONE</span></div>
+    </div>
+  </div>
+
+<script>
+/* ====================== CONFIG — EDIT THESE ======================
+  FIREBASE_URL: your Firebase Realtime Database URL (see README for setup).
+    Example: "https://your-project-id-default-rtdb.firebaseio.com"
+
+  DURATION_MINUTES: how long the key stays valid.
+    - Use something short like 1 or 2 while testing.
+    - Switch to 720 (12h) or 1440 (24h) when live.
+=================================================================== */
+const CONFIG = {
+  FIREBASE_URL: "https://ezyscript-8957a-default-rtdb.asia-southeast1.firebasedatabase.app/", // <-- paste your Firebase URL here
+  DURATION_MINUTES: 1
+};
+/* =================================================================== */
+
+function generateRandomKey(length = 16) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing 0/O/1/I
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `KEY-${out}`;
+}
+
+const statusBox = document.getElementById('statusBox');
+const keyValueEl = document.getElementById('keyValue');
+const copyBtn = document.getElementById('copyBtn');
+
+function showStatus(type, msg) {
+  statusBox.innerHTML = `<div class="status ${type}">${msg}</div>`;
+}
+
+async function createKey() {
+  const key = generateRandomKey();
+  const expiryUnix = Math.floor(Date.now() / 1000) + CONFIG.DURATION_MINUTES * 60;
+
+  try {
+    const res = await fetch(`${CONFIG.FIREBASE_URL}/keys/${key}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiry: expiryUnix, used: false, usedBy: null, createdAt: Date.now() })
+    });
+    if (!res.ok) throw new Error('Database write failed');
+
+    keyValueEl.textContent = key;
+    copyBtn.disabled = false;
+    copyBtn.textContent = 'COPY KEY';
+    startCountdown(expiryUnix);
+  } catch (err) {
+    showStatus('err', 'Could not reach the key database. Check FIREBASE_URL in this page\'s config, and that your Firebase database rules allow writes.');
+    keyValueEl.textContent = 'error — see message above';
+  }
+}
+
+function startCountdown(expiryUnix) {
+  const totalSeconds = CONFIG.DURATION_MINUTES * 60;
+  function tick() {
+    const remaining = expiryUnix - Math.floor(Date.now() / 1000);
+    const timerValue = document.getElementById('timerValue');
+    const timerBar = document.getElementById('timerBar');
+    const timerLabel = document.getElementById('timerLabel');
+
+    if (remaining <= 0) {
+      timerValue.textContent = "00:00";
+      timerBar.style.width = "0%";
+      timerLabel.textContent = "expired";
+      document.getElementById('expiredTag').style.display = 'block';
+      clearInterval(interval);
+      return;
+    }
+    const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+    const s = (remaining % 60).toString().padStart(2, '0');
+    timerValue.textContent = `${m}:${s}`;
+    timerBar.style.width = `${(remaining / totalSeconds) * 100}%`;
+  }
+  tick();
+  const interval = setInterval(tick, 1000);
+}
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(keyValueEl.textContent).then(() => {
+    const original = copyBtn.textContent;
+    copyBtn.textContent = "COPIED ✓";
+    setTimeout(() => { copyBtn.textContent = original; }, 1500);
+  });
+});
+
+createKey();
+</script>
+</body>
+</html>
