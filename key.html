@@ -165,8 +165,22 @@ function showStatus(type, msg) {
 }
 
 async function createKey() {
+  const now = Math.floor(Date.now() / 1000);
+  const storedKey = localStorage.getItem('ezyKey');
+  const storedExpiry = localStorage.getItem('ezyExpiry');
+
+  // Check if a valid key already exists in local storage
+  if (storedKey && storedExpiry && now < parseInt(storedExpiry)) {
+    keyValueEl.textContent = storedKey;
+    copyBtn.disabled = false;
+    copyBtn.textContent = 'COPY KEY';
+    startCountdown(parseInt(storedExpiry));
+    return;
+  }
+
+  // Otherwise, generate a new key
   const key = generateRandomKey();
-  const expiryUnix = Math.floor(Date.now() / 1000) + CONFIG.DURATION_MINUTES * 60;
+  const expiryUnix = now + CONFIG.DURATION_MINUTES * 60;
 
   try {
     const res = await fetch(`${CONFIG.FIREBASE_URL}/keys/${key}.json`, {
@@ -175,6 +189,10 @@ async function createKey() {
       body: JSON.stringify({ expiry: expiryUnix, used: false, usedBy: null, createdAt: Date.now() })
     });
     if (!res.ok) throw new Error('Database write failed');
+
+    // Save the new key and expiry to local storage
+    localStorage.setItem('ezyKey', key);
+    localStorage.setItem('ezyExpiry', expiryUnix);
 
     keyValueEl.textContent = key;
     copyBtn.disabled = false;
@@ -195,16 +213,31 @@ function startCountdown(expiryUnix) {
     const timerLabel = document.getElementById('timerLabel');
 
     if (remaining <= 0) {
-      timerValue.textContent = "00:00";
+      timerValue.textContent = "00:00:00";
       timerBar.style.width = "0%";
       timerLabel.textContent = "expired";
       document.getElementById('expiredTag').style.display = 'block';
+      
+      // Clean up local storage once expired
+      localStorage.removeItem('ezyKey');
+      localStorage.removeItem('ezyExpiry');
+      
       clearInterval(interval);
       return;
     }
-    const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+
+    // Calculate hours, minutes, and seconds
+    const h = Math.floor(remaining / 3600).toString().padStart(2, '0');
+    const m = Math.floor((remaining % 3600) / 60).toString().padStart(2, '0');
     const s = (remaining % 60).toString().padStart(2, '0');
-    timerValue.textContent = `${m}:${s}`;
+
+    // Format display based on whether hours are needed
+    if (remaining >= 3600) {
+      timerValue.textContent = `${h}:${m}:${s}`;
+    } else {
+      timerValue.textContent = `${m}:${s}`;
+    }
+
     timerBar.style.width = `${(remaining / totalSeconds) * 100}%`;
   }
   tick();
